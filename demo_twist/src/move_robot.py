@@ -3,6 +3,8 @@
 import rospy
 import math
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+
 
 
 class RobotMove:
@@ -15,6 +17,10 @@ class RobotMove:
     # Start new node
     rospy.init_node('robot_twist', anonymous=True) 
     cmd_vel = rospy.Publisher('/cmd_vel_mux/input/teleop', Twist, queue_size=10) 
+    odom = rospy.Subscriber('/odom', Odometry, cb)
+
+    def cb(self, data):
+        print(data.pose.pose.orientation)
 
     def line(self):
         vel_msg = Twist()
@@ -69,4 +75,4 @@ class RobotMove:
 
 if __name__ == '__main__':
     mv = RobotMove()
-    mv.triangle()
+    mv.square()
