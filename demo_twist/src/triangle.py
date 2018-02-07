@@ -68,7 +68,7 @@ class RobotMove:
         vel_msg.linear.x = 0.5
     #   self._move_wheels(2, vel_msg)
 
-        for i in range(1,3):
+        for i in range(1,4):
            # self._rotate((math.pi*2)/3)
             self._move_wheels(2, vel_msg)
             self._rotate((math.pi*2)/3)

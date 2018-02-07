@@ -76,4 +76,4 @@ class RobotMove:
 
 if __name__ == '__main__':
     mv = RobotMove()
-    mv.triangle()
+    mv.square()
