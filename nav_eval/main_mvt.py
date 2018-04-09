@@ -23,9 +23,14 @@
       
 """
 
+import take_photo
 import roslib; roslib.load_manifest('nav_eval')
 import rospy
 import actionlib
+import math
+import square
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from actionlib_msgs.msg import *
 from geometry_msgs.msg import Pose, PoseWithCovarianceStamped, Point, Quaternion, Twist
@@ -33,13 +38,19 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from random import sample
 from math import pow, sqrt
 
-capteur_zigbee = Pose(Point(-1.133, 0.613, 0.000), Quaternion(0.000, 0.000, 0.733, 0.680))
+capteur_zigbee = Pose(Point(-0.212, 1.631, 0.000), Quaternion(0.000, 0.000, 0.733, 0.680))
 movement_detected = False
 
 
 
 
 class NavTest():
+    DRIVE_SPEED = 0.2
+    DRIVE_SPEED_FACTOR = 0.80
+    ROT_SPEED = 0.5
+    ROT_SPEED_FACTOR = 0.5
+    CMD_VEL_TIME_FACTOR = 0.625
+
     def __init__(self):
         
         
@@ -120,10 +131,12 @@ class NavTest():
             if movement_detected:
                 global capteur_zigbee
                 self.move_base.cancel_goal()
+		rospy.loginfo("un mouvement a ete detecte, annulation de celui en cours")
                 self.goal = MoveBaseGoal()
                 self.goal.target_pose.pose = capteur_zigbee
                 self.goal.target_pose.header.frame_id = 'map'
                 self.goal.target_pose.header.stamp = rospy.Time.now()
+		
                 rospy.loginfo("Going to the capteur_zigbee")
                 self.move_base.send_goal(self.goal)
 
@@ -133,19 +146,61 @@ class NavTest():
                 # Check for success or failure
                 if not finished_within_time:
                     self.move_base.cancel_goal()
-                    rospy.loginfo("Timed out achieving goal")
+                    rospy.loginfo("Timed out achieving the movement")
                 else:
                     state = self.move_base.get_state()
                     if state == GoalStatus.SUCCEEDED:
-                        rospy.loginfo("Goal succeeded!")
+                        rospy.loginfo("Goal succeeded to the movement!")
                         n_successes += 1
                         distance_traveled += distance
                         rospy.loginfo("State:" + str(state))
                     else:
-                        rospy.loginfo("Goal failed with error code: " + str(goal_states[state]))
+                        rospy.loginfo("Goal to the movement failed with error code: " + str(goal_states[state]))
                 
                 # Print a summary success/failure, distance traveled and time elapsed
                 rospy.sleep(self.rest_time)
+		
+		camera = take_photo.TakePhoto()
+
+                # Take a photo
+
+                # Use '_image_title' parameter from command line
+                # Default value is 'photo.jpg'
+                img_title1 = rospy.get_param('~image_title', 'photo1.jpg')
+		rospy.loginfo("Je commence la rotation")
+                robot_move = square.RobotMove()
+                robot_move._rotate(math.pi/2)
+                rospy.loginfo("J'ai fini la rotation")
+                img_title2 = rospy.get_param('~image_title', 'photo2.jpg')
+		robot_move = square.RobotMove()
+                robot_move._rotate(math.pi/2)
+                img_title3 = rospy.get_param('~image_title', 'photo3.jpg')
+		robot_move = square.RobotMove()
+                robot_move._rotate(math.pi/2)
+                img_title4 = rospy.get_param('~image_title', 'photo4.jpg')
+
+
+
+                if camera.take_picture(img_title1):
+                    rospy.loginfo("Saved image " + img_title1)
+                else:
+                   rospy.loginfo("No images received")
+
+                if camera.take_picture(img_title2):
+                    rospy.loginfo("Saved image " + img_title2)
+                else:
+                   rospy.loginfo("No images received")
+
+                if camera.take_picture(img_title3):
+                    rospy.loginfo("Saved image " + img_title3)
+                else:
+                   rospy.loginfo("No images received")
+
+                if camera.take_picture(img_title4):
+                    rospy.loginfo("Saved image " + img_title4)
+                else:
+		    rospy.loginfo("No images received")
+
     
             else:
                 # If we've gone through the current sequence,
@@ -237,9 +292,11 @@ class NavTest():
 
     def callback(self, data):
         global movement_detected
+        
         movement_detected = True
         rospy.loginfo(movement_detected)
-      
+    
+
 def trunc(f, n):
     # Truncates/pads a float f to n decimal places without rounding
     slen = len('%.*f' % (n, f))
