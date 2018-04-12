@@ -11,7 +11,7 @@ def talker():
     rospy.init_node('mouvement_publisher', anonymous=True)
     rate = rospy.Rate(1) # 10hz
     while not rospy.is_shutdown():
-	pub.publish(ser.readline())
+	    pub.publish(ser.readline())
        	rate.sleep()
 	
 if __name__ == '__main__':
