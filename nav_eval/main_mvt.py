@@ -166,18 +166,18 @@ class NavTest():
 
                 # Use '_image_title' parameter from command line
                 # Default value is 'photo.jpg'
-                img_title1 = rospy.get_param('~image_title', 'photo1.jpg')
+                img_title1 = rospy.get_param('~image_title1', 'photo1.jpg')
 		rospy.loginfo("Je commence la rotation")
                 robot_move = square.RobotMove()
                 robot_move._rotate(math.pi/2)
                 rospy.loginfo("J'ai fini la rotation")
-                img_title2 = rospy.get_param('~image_title', 'photo2.jpg')
+                img_title2 = rospy.get_param('~image_title2', 'photo2.jpg')
 		robot_move = square.RobotMove()
                 robot_move._rotate(math.pi/2)
-                img_title3 = rospy.get_param('~image_title', 'photo3.jpg')
+                img_title3 = rospy.get_param('~image_title3', 'photo3.jpg')
 		robot_move = square.RobotMove()
                 robot_move._rotate(math.pi/2)
-                img_title4 = rospy.get_param('~image_title', 'photo4.jpg')
+                img_title4 = rospy.get_param('~image_title4', 'photo4.jpg')
 
 
 
@@ -292,6 +292,7 @@ class NavTest():
 
     def callback(self, data):
         global movement_detected
+        self.move_base.cancel_goal()
         
         movement_detected = True
         rospy.loginfo(movement_detected)
