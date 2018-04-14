@@ -38,11 +38,14 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from random import sample
 from math import pow, sqrt
 
+NAV = 0
+MVT_DETECTED = 1
+TAKE_PHOTO = 2
+MVT_WAIT = 3
+
+
 capteur_zigbee = Pose(Point(-0.212, 1.631, 0.000), Quaternion(0.000, 0.000, 0.733, 0.680))
 movement_detected = False
-
-
-
 
 class NavTest():
     DRIVE_SPEED = 0.2
@@ -50,6 +53,7 @@ class NavTest():
     ROT_SPEED = 0.5
     ROT_SPEED_FACTOR = 0.5
     CMD_VEL_TIME_FACTOR = 0.625
+    state = NAV
 
     def __init__(self):
 
@@ -128,7 +132,7 @@ class NavTest():
 
         # Begin the main loop and run through a sequence of locations
         while not rospy.is_shutdown():
-            if movement_detected:
+            if self.state == MVT_DETECTED:
                 global capteur_zigbee
                 self.move_base.cancel_goal()
 		rospy.loginfo("un mouvement a ete detecte, annulation de celui en cours")
@@ -139,7 +143,11 @@ class NavTest():
 
                 rospy.loginfo("Going to the capteur_zigbee")
                 self.move_base.send_goal(self.goal)
+                self.state == MVT_WAIT
+                rospy.loginfo("Changed state to {}".format(self.state))
 
+           
+            elif self.state == MVT_WAIT:
                 # Allow 5 minutes to get there
                 finished_within_time = self.move_base.wait_for_result(rospy.Duration(300))
 
@@ -154,12 +162,17 @@ class NavTest():
                         n_successes += 1
                         distance_traveled += distance
                         rospy.loginfo("State:" + str(state))
+                        self.state = TAKE_PHOTO
+                        rospy.loginfo("Changed state to {}".format(self.state))
                     else:
                         rospy.loginfo("Goal to the movement failed with error code: " + str(goal_states[state]))
 
                 # Print a summary success/failure, distance traveled and time elapsed
                 rospy.sleep(self.rest_time)
-                camera = take_photo.TakePhoto()
+
+            elif self.state == TAKE_PHOTO:
+		
+		camera = take_photo.TakePhoto()
 
                 # Take a photo
 
@@ -193,8 +206,10 @@ class NavTest():
                 if camera.take_picture(img_title4):
                     rospy.loginfo("Saved image " + img_title4)
                 else:
-		            rospy.loginfo("No images received")
+		    rospy.loginfo("No images received")
 
+                self.state = NAV
+                rospy.loginfo("Changed state to {}".format(self.state))
 
             else:
                 # If we've gone through the current sequence,
@@ -285,11 +300,10 @@ class NavTest():
 
 
     def callback(self, data):
-        global movement_detected
-        self.move_base.cancel_goal()
-
-        movement_detected = True
-        rospy.loginfo(movement_detected)
+        if self.state == NAV:
+            self.state = MVT_DETECTED
+            rospy.loginfo("Changed state to {}".format(self.state))
+            rospy.loginfo(movement_detected)
 
 
 def trunc(f, n):
