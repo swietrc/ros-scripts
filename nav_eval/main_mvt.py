@@ -134,7 +134,6 @@ class NavTest():
         while not rospy.is_shutdown():
             if self.state == MVT_DETECTED:
                 global capteur_zigbee
-                self.move_base.cancel_goal()
 		rospy.loginfo("un mouvement a ete detecte, annulation de celui en cours")
                 self.goal = MoveBaseGoal()
                 self.goal.target_pose.pose = capteur_zigbee
@@ -143,7 +142,7 @@ class NavTest():
 
                 rospy.loginfo("Going to the capteur_zigbee")
                 self.move_base.send_goal(self.goal)
-                self.state == MVT_WAIT
+                self.state = MVT_WAIT
                 rospy.loginfo("Changed state to {}".format(self.state))
 
            
@@ -301,9 +300,9 @@ class NavTest():
 
     def callback(self, data):
         if self.state == NAV:
+            self.move_base.cancel_goal()
             self.state = MVT_DETECTED
             rospy.loginfo("Changed state to {}".format(self.state))
-            rospy.loginfo(movement_detected)
 
 
 def trunc(f, n):
